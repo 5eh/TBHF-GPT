@@ -7,10 +7,10 @@ import { Footer } from "@/components/ui/footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://fundtheworld.arthurlabs.net"),
-  title: "Bitcoin Charity Searches",
+  metadataBase: new URL("https://blogs.arthurlabs.net"),
+  title: "TechBlog - Articles & Insights",
   description:
-    "Frank, Trevor, Watson. FTW. Fund the World. A global charity donation platform utilizing Bitcoin and Artificial Intelligence.",
+    "Discover the latest tech trends, insights, and in-depth articles from industry experts. Your go-to resource for technology news and knowledge.",
 };
 
 export default async function RootLayout({

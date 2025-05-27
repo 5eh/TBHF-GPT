@@ -1,28 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createOrganization } from "@/db/queries";
+import { createBlog } from "@/db/queries";
 
 export const dynamic = "force-dynamic";
 
-interface OrganizationSubmission {
+interface BlogSubmission {
   nickname: string;
   image: string;
   title: string;
   banner: string;
-  mission: string;
+  shortSummary: string;
   tags: string[];
-  bgGradient: string;
-  bitcoinAddress: string;
-  location: string;
-  fullContext: string;
-  website: string;
-  email: string;
-  startDate: string;
-  registrationNumber: string;
-  president: string;
-  founder: string;
-  customMessage: string;
-  verified: boolean;
-  premium: boolean;
+  document: string;
+  authors: string;
+  finalNote: string;
+  date: string;
+  metadata?: Record<string, any>;
 }
 
 export async function POST(request: NextRequest) {
@@ -34,11 +26,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const data: OrganizationSubmission = await request.json();
+    const data: BlogSubmission = await request.json();
     console.log("Received data:", data);
 
     // Required fields validation
-    const requiredFields = ['title', 'email', 'bitcoinAddress', 'nickname', 'mission'] as const;
+    const requiredFields = ['title', 'nickname', 'shortSummary', 'document'] as const;
     const missingFields = requiredFields.filter(field => !data[field]);
     
     if (missingFields.length > 0) {
@@ -51,50 +43,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
-      return NextResponse.json(
-        { error: "Invalid email format" },
-        { status: 400 }
-      );
-    }
-
-    const bitcoinRegex = /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-zA-HJ-NP-Z0-9]{39,59}$/;
-    if (!bitcoinRegex.test(data.bitcoinAddress)) {
-      return NextResponse.json(
-        { error: "Invalid Bitcoin address format" },
-        { status: 400 }
-      );
-    }
-
-
     if (!Array.isArray(data.tags)) {
       data.tags = [];
     }
 
-    const organizationData = {
+    const blogData = {
       ...data,
-      verified: false,
-      premium: false,
       tags: data.tags || [],
-      startDate: data.startDate || new Date().toISOString(),
+      date: data.date ? new Date(data.date) : new Date(),
+      metadata: data.metadata || {},
+      shortSummary: data.shortSummary || '',
+      authors: data.authors || '',
+      finalNote: data.finalNote || '',
     };
 
-    console.log("Processed data for DB:", organizationData);
+    console.log("Processed data for DB:", blogData);
 
-    const result = await createOrganization(organizationData);
+    // Ensure all properties are of the correct type before passing to DB
+    const result = await createBlog({
+      ...blogData,
+      nickname: String(blogData.nickname || ''),
+      image: String(blogData.image || ''),
+      title: String(blogData.title || ''),
+      banner: String(blogData.banner || ''),
+      shortSummary: String(blogData.shortSummary || ''),
+      document: String(blogData.document || ''),
+      authors: String(blogData.authors || ''),
+      finalNote: String(blogData.finalNote || ''),
+    });
 
     return NextResponse.json(
-      { message: "Organization created successfully", data: result },
+      { message: "Blog created successfully", data: result },
       { status: 201 },
     );
   } catch (error) {
-    console.error("Failed to create organization:", error);
+    console.error("Failed to create blog:", error);
+    // Add more detailed error reporting
     return NextResponse.json(
       { 
-        error: "Failed to create organization",
-        details: error instanceof Error ? error.message : "Unknown error"
+        error: "Failed to create blog",
+        details: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined
       },
       { status: 500 }
     );

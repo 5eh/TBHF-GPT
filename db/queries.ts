@@ -7,8 +7,8 @@ import {
   chat,
   User,
   reservation,
-  organization,
-  Organization,
+  blogs,
+  Blog,
 } from "./schema";
 
 let client = postgres(`${process.env.POSTGRES_URL!}?sslmode=require`);
@@ -142,106 +142,125 @@ export async function updateReservation({
     .where(eq(reservation.id, id));
 }
 
-export async function createOrganization(org: {
+export async function createBlog(blog: {
   nickname: string;
   image: string;
   title: string;
   banner: string;
-  mission: string;
+  shortSummary: string;
   tags: string[];
-  verified: boolean;
-  premium: boolean;
-  bgGradient: string;
-  bitcoinAddress: string;
-  location: string;
-  fullContext: string;
-  website: string;
-  email: string;
-  startDate: string;
-  registrationNumber: string;
-  president: string;
-  founder: string;
-  customMessage: string;
+  document: string;
+  authors: string;
+  finalNote: string;
+  date: Date | string;
+  metadata?: Record<string, any>;
 }) {
   try {
-    const newOrg = {
-      ...org,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      verified: false,
-      premium: false,
-      tags: JSON.stringify(org.tags),
+    // Map the input fields to match the database column names
+    const newBlog = {
+      nickname: blog.nickname,
+      image: blog.image,
+      title: blog.title,
+      banner: blog.banner,
+      short_summary: blog.shortSummary,
+      document: blog.document,
+      authors: blog.authors,
+      final_note: blog.finalNote,
+      date: blog.date instanceof Date ? blog.date : new Date(blog.date),
+      tags: blog.tags ? JSON.stringify(blog.tags) : JSON.stringify([]),
+      metadata: blog.metadata ? JSON.stringify(blog.metadata) : JSON.stringify({}),
     };
 
-    return await db.insert(organization).values(newOrg);
+    return await db.insert(blogs).values(newBlog);
   } catch (error) {
-    console.error("Failed to create organization in database");
+    console.error("Failed to create blog in database");
     throw error;
   }
 }
 
-export async function getOrganizationById({ id }: { id: string }) {
+export async function getBlogById({ id }: { id: number }) {
   try {
-    const [selectedOrg] = await db
+    const [selectedBlog] = await db
       .select()
-      .from(organization)
-      .where(eq(organization.id, id));
-    return selectedOrg;
+      .from(blogs)
+      .where(eq(blogs.id, id));
+    return selectedBlog;
   } catch (error) {
-    console.error("Failed to get organization by id from database");
+    console.error("Failed to get blog by id from database");
     throw error;
   }
 }
 
-export async function getAllOrganizations() {
+export async function getAllBlogs() {
   try {
-    return await db.select().from(organization).orderBy(desc(organization));
+    return await db.select().from(blogs).orderBy(desc(blogs.date));
   } catch (error) {
-    console.error("Failed to get all organizations from database");
+    console.error("Failed to get all blogs from database");
     throw error;
   }
 }
 
-export async function updateOrganization({
+export async function updateBlog({
   id,
   values,
 }: {
-  id: string;
-  values: Partial<Organization>;
+  id: number;
+  values: Partial<Blog>;
 }) {
   try {
+    // If tags or metadata are included and they're arrays/objects, stringify them
+    const processedValues = { ...values };
+    
+    // Fix field name mapping for column names with underscores
+    if (values.shortSummary !== undefined) {
+      processedValues.short_summary = values.shortSummary;
+      delete processedValues.shortSummary;
+    }
+    
+    if (values.finalNote !== undefined) {
+      processedValues.final_note = values.finalNote;
+      delete processedValues.finalNote;
+    }
+    
+    if (processedValues.tags && typeof processedValues.tags !== 'string') {
+      processedValues.tags = JSON.stringify(processedValues.tags);
+    }
+    if (processedValues.metadata && typeof processedValues.metadata !== 'string') {
+      processedValues.metadata = JSON.stringify(processedValues.metadata);
+    }
+    
     return await db
-      .update(organization)
-      .set(values)
-      .where(eq(organization.id, id));
+      .update(blogs)
+      .set(processedValues)
+      .where(eq(blogs.id, id));
   } catch (error) {
-    console.error("Failed to update organization in database");
+    console.error("Failed to update blog in database");
     throw error;
   }
 }
 
-export async function deleteOrganizationById({ id }: { id: string }) {
+export async function deleteBlogById({ id }: { id: number }) {
   try {
-    return await db.delete(organization).where(eq(organization.id, id));
+    return await db.delete(blogs).where(eq(blogs.id, id));
   } catch (error) {
-    console.error("Failed to delete organization by id from database");
+    console.error("Failed to delete blog by id from database");
     throw error;
   }
 }
 
-export async function getOrganizationByNickname({
+export async function getBlogByNickname({
   nickname,
 }: {
   nickname: string;
 }) {
   try {
-    const [selectedOrg] = await db
+    const [selectedBlog] = await db
       .select()
-      .from(organization)
-      .where(eq(organization.nickname, nickname));
-    return selectedOrg;
+      .from(blogs)
+      .where(eq(blogs.nickname, nickname));
+    return selectedBlog;
   } catch (error) {
-    console.error("Failed to get organization by nickname from database");
+    console.error("Failed to get blog by nickname from database");
     throw error;
   }
 }

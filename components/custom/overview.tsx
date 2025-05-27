@@ -21,18 +21,23 @@ export const Overview = () => {
         </p>
         <p>
           <code className="text-primary rounded-none bg-muted-foreground/15 px-1.5 py-0.5">
-            Fund The World
+            The Black History Foundation
           </code>{" "}
-          is an open blockchain initiative focused on enabling charities to
-          further expose social issues and raise funds.
+          is an open blockchain initiative focused on timestamping and building
+          permanent ledgers of unbiased human history.
         </p>
         <p>
           {" "}
-          You can find charities that follow your beliefs below. Type{" "}
+          You can find blogs, or content that follow your beliefs below. Type{" "}
           <code className="text-primary rounded-none bg-muted-foreground/15 px-1.5 py-0.5">
             Donate
           </code>{" "}
           to make a finacial contribution to any charity on this platform in{" "}
+          <code className="text-[#f7931a] rounded-none bg-muted-foreground/15 px-1.5 py-0.5 flex w-fit gap-2 justify-center">
+            <Image src={"images/icon.svg"} height={16} width={16} alt="BTC" />
+            Bitcoin!
+          </code>
+          <span> or </span>
           <code className="text-[#f7931a] rounded-none bg-muted-foreground/15 px-1.5 py-0.5 flex w-fit gap-2 justify-center">
             <Image src={"images/icon.svg"} height={16} width={16} alt="BTC" />
             Bitcoin!

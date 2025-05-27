@@ -1,33 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOrganizationByNickname } from "@/db/queries";
+import { getBlogByNickname } from "@/db/queries";
 
-interface Organization {
-  id: string;
+interface Blog {
+  id: number;
+  nickname: string;
   image: string;
   title: string;
-  mission: string;
-  tags: string[];
-  verified: boolean;
-  premium: boolean;
-  bgGradient: string;
-  bitcoinAddress: string;
-  location: string;
-  fullContext: string;
-  website: string;
-  email: string;
-  originDate: string;
-  registrationNumber: string;
-  president: string;
-  founder: string;
   banner: string;
-  nickname: string;
-  customMessage: string;
-  createdAt: string;
-  updatedAt: string;
+  shortSummary: string;
+  short_summary?: string;  // Database column name
+  tags: string[];
+  document: string;
+  authors: string;
+  finalNote: string;
+  final_note?: string;  // Database column name
+  date: string;
+  metadata: Record<string, any>;
 }
 
 type ApiResponse = {
-  data?: Organization;
+  data?: Blog;
   error?: string;
 };
 
@@ -45,20 +37,29 @@ export async function GET(
       );
     }
 
-    const organization = await getOrganizationByNickname({
+    const blog = await getBlogByNickname({
       nickname: params.nickname,
     });
 
-    if (!organization) {
+    if (!blog) {
       return NextResponse.json(
-        { error: "Organization not found" },
+        { error: "Blog not found" },
         { status: 404 },
       );
     }
 
-    return NextResponse.json({ data: organization as Organization });
+    // Parse JSON fields if they are strings and map to the proper field names
+    const processedBlog = {
+      ...blog,
+      tags: typeof blog.tags === 'string' ? JSON.parse(blog.tags) : blog.tags,
+      metadata: typeof blog.metadata === 'string' ? JSON.parse(blog.metadata) : blog.metadata,
+      shortSummary: blog.short_summary,
+      finalNote: blog.final_note
+    };
+
+    return NextResponse.json({ data: processedBlog as Blog });
   } catch (error) {
-    console.error("Failed to fetch organization:", error);
+    console.error("Failed to fetch blog:", error);
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Internal server error",

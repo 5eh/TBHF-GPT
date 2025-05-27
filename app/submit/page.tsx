@@ -1,11 +1,10 @@
 "use client";
 
 import { Label } from "@radix-ui/react-label";
-import { isCompanyEmail } from "company-email-validator";
 import { Check, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { useCountries } from "use-react-countries";
+import { Markdown } from "@/components/custom/markdown";
 import MarkdownEditor from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import GradientPopup from "@/components/ui/gradient-popup";
@@ -14,9 +13,9 @@ import { cn } from "@/lib/utils";
 
 const steps = [
   { id: 1, name: "Basic Information" },
-  { id: 2, name: "Organization Details" },
+  { id: 2, name: "Blog Content" },
   { id: 3, name: "Media & Tags" },
-  { id: 4, name: "Leadership & Contact" },
+  { id: 4, name: "Additional Details" },
   { id: 5, name: "Review & Submit" },
 ];
 
@@ -27,51 +26,33 @@ interface FormData {
   title: string;
   banner: string;
   bannerFile?: File | null;
-  mission: string;
+  shortSummary: string;
   tags: string[];
-  verified: boolean;
-  premium: boolean;
-  bgGradient: string;
-  bitcoinAddress: string;
-  location: string;
-  fullContext: string;
-  website: string;
-  email: string;
-  startDate: string;
-  registrationNumber: string;
-  president: string;
-  founder: string;
-  customMessage: string;
+  document: string;
+  authors: string;
+  finalNote: string;
+  date: string;
+  metadata: Record<string, any>;
 }
 
 // This type matches the API route's expected submission data
-interface OrganizationSubmission {
+interface BlogSubmission {
   nickname: string;
   image: string;
   title: string;
   banner: string;
-  mission: string;
+  shortSummary: string;
   tags: string[];
-  bgGradient: string;
-  bitcoinAddress: string;
-  location: string;
-  fullContext: string;
-  website: string;
-  email: string;
-  startDate: string;
-  registrationNumber: string;
-  president: string;
-  founder: string;
-  customMessage: string;
-  verified: boolean;
-  premium: boolean;
+  document: string;
+  authors: string;
+  finalNote: string;
+  date: string;
+  metadata?: Record<string, any>;
 }
 
 const Page = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isMounted, setIsMounted] = useState(false);
-  const { countries } = useCountries();
-  const [emailError, setEmailError] = useState("");
   const [formData, setFormData] = useState<FormData>({
     nickname: "",
     image: "",
@@ -79,21 +60,13 @@ const Page = () => {
     title: "",
     banner: "",
     bannerFile: null,
-    mission: "",
+    shortSummary: "",
     tags: [],
-    verified: false,
-    premium: true,
-    bgGradient: "",
-    bitcoinAddress: "",
-    location: "",
-    fullContext: "",
-    website: "",
-    email: "",
-    startDate: "",
-    registrationNumber: "",
-    president: "",
-    founder: "",
-    customMessage: "",
+    document: "",
+    authors: "",
+    finalNote: "",
+    date: new Date().toISOString().split("T")[0],
+    metadata: { bgGradient: "from-gray-100 to-gray-200" },
   });
   const [isGradientPopupOpen, setIsGradientPopupOpen] = useState(false);
 
@@ -109,12 +82,6 @@ const Page = () => {
       // for image and banner fields
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
-
-      if (name === "email") {
-        setEmailError(
-          !isCompanyEmail(value) ? "Please enter a valid company email" : "",
-        );
-      }
     }
   };
 
@@ -149,26 +116,21 @@ const Page = () => {
     try {
       // Images have already been uploaded to ImgBB when selected
       // We just need to prepare the submission data
-      const submissionData: OrganizationSubmission = {
+      const submissionData: BlogSubmission = {
         nickname: formData.nickname,
         image: formData.image,
         title: formData.title,
         banner: formData.banner,
-        mission: formData.mission,
+        shortSummary: formData.shortSummary,
         tags: formData.tags,
-        verified: formData.verified,
-        premium: formData.premium,
-        bgGradient: formData.bgGradient,
-        bitcoinAddress: formData.bitcoinAddress,
-        location: formData.location,
-        fullContext: formData.fullContext,
-        website: formData.website,
-        email: formData.email,
-        startDate: formData.startDate,
-        registrationNumber: formData.registrationNumber,
-        president: formData.president,
-        founder: formData.founder,
-        customMessage: formData.customMessage,
+        document: formData.document,
+        authors: formData.authors,
+        finalNote: formData.finalNote,
+        date: formData.date,
+        metadata: {
+          ...formData.metadata,
+          bgGradient: formData.metadata.bgGradient,
+        },
       };
 
       // Submit the form data to the API
@@ -185,14 +147,16 @@ const Page = () => {
       }
 
       // Handle success (redirect or show success message)
-      alert("Organization submitted successfully!");
+      alert("Blog submitted successfully!");
 
       // You could add navigation to a success page here
       // For example: window.location.href = "/success";
     } catch (error) {
       console.error("Submission error:", error);
       // Handle error (show error message)
-      alert(`Error submitting organization: ${error instanceof Error ? error.message : String(error)}`);
+      alert(
+        `Error submitting blog: ${error instanceof Error ? error.message : String(error)}`,
+      );
       // Reset to current step in case of error
       setCurrentStep(steps.length);
     }
@@ -204,7 +168,7 @@ const Page = () => {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="title">Organization Name</Label>
+              <Label htmlFor="title">Blog Title</Label>
               <input
                 type="text"
                 id="title"
@@ -226,13 +190,13 @@ const Page = () => {
               />
             </div>
             <div>
-              <Label htmlFor="mission">Mission Statement</Label>
+              <Label htmlFor="shortSummary">Summary</Label>
               <textarea
-                id="mission"
-                name="mission"
+                id="shortSummary"
+                name="shortSummary"
                 rows={4}
                 className="w-full mt-1 bg-white/5 rounded border border-gray-600 p-2"
-                value={formData.mission}
+                value={formData.shortSummary}
                 onChange={handleInputChange}
               />
             </div>
@@ -243,35 +207,24 @@ const Page = () => {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="fullContext">Full Organization Context</Label>
-              <textarea
-                id="fullContext"
-                name="fullContext"
-                rows={6}
-                className="w-full mt-1 bg-white/5 rounded border border-gray-600 p-2"
-                value={formData.fullContext}
-                onChange={handleInputChange}
+              <Label htmlFor="document">Blog Content</Label>
+              <MarkdownEditor
+                value={formData.document}
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, document: value }))
+                }
+                label="Blog Content"
+                placeholder="Write your markdown content here..."
               />
             </div>
             <div>
-              <Label htmlFor="bitcoinAddress">Bitcoin Address</Label>
+              <Label htmlFor="date">Publication Date</Label>
               <input
-                type="text"
-                id="bitcoinAddress"
-                name="bitcoinAddress"
+                type="date"
+                id="date"
+                name="date"
                 className="w-full mt-1 bg-white/5 rounded border border-gray-600 p-2"
-                value={formData.bitcoinAddress}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <input
-                type="text"
-                id="location"
-                name="location"
-                className="w-full mt-1 bg-white/5 rounded border border-gray-600 p-2"
-                value={formData.location}
+                value={formData.date}
                 onChange={handleInputChange}
               />
             </div>
@@ -282,7 +235,7 @@ const Page = () => {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="image">Organization Logo</Label>
+              <Label htmlFor="image">Featured Image</Label>
               <input
                 type="file"
                 id="image"
@@ -296,7 +249,7 @@ const Page = () => {
                     setFormData((prev) => ({
                       ...prev,
                       imageFile: file,
-                      image: URL.createObjectURL(file)
+                      image: URL.createObjectURL(file),
                     }));
 
                     try {
@@ -323,7 +276,7 @@ const Page = () => {
                       alt="Preview"
                       fill
                       className="object-contain"
-                      unoptimized={formData.image.startsWith('blob:')}
+                      unoptimized={formData.image.startsWith("blob:")}
                     />
                   </div>
                 </div>
@@ -371,7 +324,7 @@ const Page = () => {
                       alt="Banner Preview"
                       fill
                       className="object-cover"
-                      unoptimized={formData.banner.startsWith('blob:')}
+                      unoptimized={formData.banner.startsWith("blob:")}
                     />
                   </div>
                 </div>
@@ -385,8 +338,7 @@ const Page = () => {
                   id="bgGradient"
                   name="bgGradient"
                   className="flex-1 mt-1 bg-white/5 rounded border border-gray-600 p-2"
-                  value={formData.bgGradient}
-                  onChange={handleInputChange}
+                  value={formData.metadata.bgGradient}
                   placeholder="Select gradient using picker"
                   readOnly
                 />
@@ -404,17 +356,17 @@ const Page = () => {
               <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <div className="col-span-1">
                   <Preview
-                    title={formData.title || "Organization Name"}
+                    title={formData.title || "Blog Title"}
                     mission={
-                      formData.mission ||
-                      "Your mission statement will appear here"
+                      formData.shortSummary ||
+                      "Your blog summary will appear here"
                     }
                     image={
                       formData.image ||
                       "https://images.unsplash.com/photo-1620778182530-703effa65a06?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fGJ0Y3xlbnwwfHwwfHx8MA%3D%3D"
                     }
                     tags={formData.tags}
-                    gradient={formData.bgGradient}
+                    gradient={formData.metadata.bgGradient}
                   />
                 </div>
               </div>
@@ -423,7 +375,10 @@ const Page = () => {
               isOpen={isGradientPopupOpen}
               onClose={() => setIsGradientPopupOpen(false)}
               onSelect={(gradient) => {
-                setFormData((prev) => ({ ...prev, bgGradient: gradient }));
+                setFormData((prev) => ({
+                  ...prev,
+                  metadata: { ...prev.metadata, bgGradient: gradient },
+                }));
                 setIsGradientPopupOpen(false);
               }}
             />
@@ -453,50 +408,44 @@ const Page = () => {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="email">Contact Email</Label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                className="w-full mt-1 bg-white/5 rounded border border-gray-600 p-2"
-                value={formData.email}
-                onChange={handleInputChange}
-              />
-              {emailError && (
-                <p className="text-red-500 text-sm mt-1">{emailError}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="website">Website</Label>
-              <input
-                type="url"
-                id="website"
-                name="website"
-                className="w-full mt-1 bg-white/5 rounded border border-gray-600 p-2"
-                value={formData.website}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div>
-              <Label htmlFor="president">President</Label>
+              <Label htmlFor="authors">Authors</Label>
               <input
                 type="text"
-                id="president"
-                name="president"
+                id="authors"
+                name="authors"
                 className="w-full mt-1 bg-white/5 rounded border border-gray-600 p-2"
-                value={formData.president}
+                value={formData.authors}
                 onChange={handleInputChange}
+                placeholder="John Doe, Jane Smith"
               />
             </div>
             <div>
-              <Label htmlFor="founder">Founder</Label>
-              <input
-                type="text"
-                id="founder"
-                name="founder"
+              <Label htmlFor="finalNote">Final Note</Label>
+              <textarea
+                id="finalNote"
+                name="finalNote"
                 className="w-full mt-1 bg-white/5 rounded border border-gray-600 p-2"
-                value={formData.founder}
+                rows={4}
+                value={formData.finalNote}
                 onChange={handleInputChange}
+                placeholder="Any closing thoughts or call to action for readers"
+              />
+            </div>
+            <div>
+              <Label htmlFor="metadata.references">References (Optional)</Label>
+              <textarea
+                id="metadata.references"
+                name="metadata.references"
+                className="w-full mt-1 bg-white/5 rounded border border-gray-600 p-2"
+                rows={4}
+                value={formData.metadata.references || ""}
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    metadata: { ...prev.metadata, references: e.target.value },
+                  }));
+                }}
+                placeholder="List any references or sources used in your blog post"
               />
             </div>
           </div>
@@ -506,15 +455,17 @@ const Page = () => {
         return (
           <div className="space-y-4">
             <div>
-              <Label>Custom Message to Donors</Label>
-              <MarkdownEditor
-                value={formData.customMessage}
-                onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, customMessage: value }))
-                }
-                label="Your Message"
-                placeholder="Write your markdown message here..."
-              />
+              <h3 className="text-lg font-semibold mb-2">Blog Preview</h3>
+              <div className="bg-white/5 p-4 rounded-lg max-h-96 overflow-y-auto">
+                <h1 className="text-2xl font-bold mb-2">{formData.title}</h1>
+                <p className="text-sm text-gray-400 mb-4">
+                  By {formData.authors || "Anonymous"} •{" "}
+                  {new Date(formData.date).toLocaleDateString()}
+                </p>
+                <div className="prose prose-sm dark:prose-invert">
+                  <Markdown>{formData.document}</Markdown>
+                </div>
+              </div>
             </div>
             <div className="mt-8">
               <h3 className="font-semibold mb-4">Review Your Information</h3>
@@ -533,14 +484,20 @@ const Page = () => {
   useEffect(() => {
     setIsMounted(true);
   }, []);
-  
+
   // Clear object URLs when component unmounts to prevent memory leaks
   useEffect(() => {
     return () => {
-      if (typeof formData.image === 'string' && formData.image.startsWith('blob:')) {
+      if (
+        typeof formData.image === "string" &&
+        formData.image.startsWith("blob:")
+      ) {
         URL.revokeObjectURL(formData.image);
       }
-      if (typeof formData.banner === 'string' && formData.banner.startsWith('blob:')) {
+      if (
+        typeof formData.banner === "string" &&
+        formData.banner.startsWith("blob:")
+      ) {
         URL.revokeObjectURL(formData.banner);
       }
     };
@@ -555,7 +512,7 @@ const Page = () => {
       <div className="max-w-4xl w-full px-4">
         <div className="bg-white/5 rounded-lg p-8 backdrop-blur-sm">
           <h1 className="text-2xl font-bold mb-6 text-center">
-            Organization Submission
+            Blog Submission
           </h1>
 
           {/* Stepper */}
@@ -639,20 +596,7 @@ const Page = () => {
             </Button>
           </div>
 
-          {currentStep === steps.length && (
-            <div className="flex justify-center mt-8">
-              <iframe
-                src="https://nowpayments.io/embeds/payment-widget?iid=4426600256"
-                width="410"
-                height="696"
-                frameBorder="0"
-                scrolling="no"
-                style={{ overflowY: "hidden" }}
-              >
-                Can&apos;t load widget
-              </iframe>
-            </div>
-          )}
+          {/* Payment widget removed for blog submissions */}
         </div>
       </div>
     </div>

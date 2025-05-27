@@ -10,6 +10,8 @@ import {
   text,
   date,
   integer,
+  serial,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("User", {
@@ -45,27 +47,19 @@ export const reservation = pgTable("Reservation", {
 
 export type Reservation = InferSelectModel<typeof reservation>;
 
-export const organization = pgTable("organizations", {
-  id: uuid("id").primaryKey().notNull().defaultRandom(),
-  nickname: text("nickname").notNull(),
-  image: text("image").notNull(),
-  title: text("title").notNull(),
-  mission: text("mission").notNull(),
-  tags: json("tags").notNull(),
-  verified: boolean("verified").notNull().default(false),
-  premium: boolean("premium").notNull().default(false),
-  bgGradient: varchar("bggradient", { length: 100 }),
-  bitcoinAddress: varchar("bitcoinaddress", { length: 100 }),
-  location: varchar("location", { length: 100 }),
-  fullContext: text("fullcontext"),
-  website: text("website"),
-  email: text("email"),
-  originDate: date("startdate"),
-  registrationNumber: varchar("registrationnumber", { length: 100 }),
-  president: text("president"),
-  founder: text("founder"),
+export const blogs = pgTable("Blogs", {
+  id: serial("id").primaryKey(),
+  nickname: text("nickname"),
+  image: text("image"),
+  title: text("title"),
   banner: text("banner"),
-  customMessage: text("custommessage"),
+  shortSummary: text("short_summary"),
+  tags: jsonb("tags"),
+  document: text("document"),
+  authors: text("authors"),
+  finalNote: text("final_note"),
+  date: date("date"),
+  metadata: jsonb("metadata"),
 });
 
-export type Organization = InferSelectModel<typeof organization>;
+export type Blog = InferSelectModel<typeof blogs>;

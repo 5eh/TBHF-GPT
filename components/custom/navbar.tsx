@@ -25,7 +25,7 @@ export const Navbar = async () => {
             <div className="text-zinc-500">|</div>
             <Link href="/">
               <div className="text-sm dark:text-zinc-300 truncate w-28 md:w-fit">
-                Fund The World
+                TBHF
               </div>
             </Link>
           </div>
